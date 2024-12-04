@@ -178,8 +178,9 @@ class PrestashopWebServiceLibrary
         }
 
         if (array_key_exists('PSWS-Version', $headerArray)) {
-            $this->isPrestashopVersionSupported($headerArray['PSWS-Version']);
-            $this->version = $headerArray['PSWS-Version'];
+            $version = $headerArray['PSWS-Version'] == 0 ? '1.7.5.1' : $headerArray['PSWS-Version'];
+            $this->isPrestashopVersionSupported($version);
+            $this->version = $version;
         }
 
         $this->printDebug('HTTP REQUEST HEADER', $info['request_header']);
