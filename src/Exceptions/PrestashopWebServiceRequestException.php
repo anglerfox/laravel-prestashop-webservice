@@ -4,13 +4,17 @@ namespace Protechstudio\PrestashopWebService\Exceptions;
 
 class PrestashopWebServiceRequestException extends PrestashopWebServiceException
 {
-    static protected $label = 'This call to PrestaShop Web Services failed and returned an HTTP status of %d. That means: %s.';
-
     protected $response;
 
     public function __construct($message = null, $code = null, $response = null)
     {
-        parent::__construct(sprintf(static::$label, $code, $message), $code);
+       if ($response instanceof \SimpleXMLElement && isset($response->errors->error->message)) {
+            $message = (string) $response->errors->error->message;
+        }
+
+        $finalMessage = $message ?? sprintf("This call to PrestaShop Web Services failed with HTTP status %d.", $code);
+
+        parent::__construct($finalMessage, $code);
 
         $this->response = $response;
     }
