@@ -64,7 +64,7 @@ class PrestashopWebServiceLibrary
         $this->key = $key;
         $this->debug = $debug;
         $this->version = 'unknown';
-        
+
         $this->runningInConsole = app()->runningInConsole();
     }
 
@@ -94,12 +94,11 @@ class PrestashopWebServiceLibrary
             if ($request['response']) {
                 $xml = $this->parseXML($request['response'], true);
             }
-
             throw new PrestashopWebServiceRequestException($messages[$request['status_code']], $request['status_code'], $xml);
         } else {
             $exception = 'This call to PrestaShop Web Services returned an unexpected HTTP status of: ';
             $exception.= $request['status_code'];
-            throw new PrestashopWebServiceException($exception);
+            throw new PrestashopWebServiceRequestException($exception, $request['status_code'], null, $request['base_url']);
         }
     }
 
@@ -152,7 +151,6 @@ class PrestashopWebServiceLibrary
                 $curl_options[$defkey] = $curl_params[$defkey];
             }
         }
-
         list($response, $info, $error) = $this->executeCurl($url.= '&ws_key=' . $this->key, $curl_options);
 
         $status_code = $info['http_code'];
@@ -167,6 +165,9 @@ class PrestashopWebServiceLibrary
 
         $header = substr($response, 0, $index);
         $body = substr($response, $index);
+        $redirectUrl = isset($info['redirect_url']) ? $info['redirect_url'] : null;
+        $parsedUrl = parse_url($redirectUrl ?: $url);
+        $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
 
         $headerArray = array();
         foreach (explode("\n", $header) as $headerItem) {
@@ -197,7 +198,8 @@ class PrestashopWebServiceLibrary
             'status_code' => $status_code,
             'response' => $body,
             'header' => $header,
-            'headers' => $headerArray
+            'headers' => $headerArray,
+            'base_url' => $baseUrl
             );
     }
 
@@ -295,7 +297,7 @@ class PrestashopWebServiceLibrary
         $xml = '';
 
         if (isset($options['resource'], $options['postXml']) || isset($options['url'], $options['postXml'])) {
-            $url = (isset($options['resource']) ? $this->url.'/api/'.$options['resource'] : $options['url']);
+            $url = (isset($options['resource']) ? $this->url.'/webservice/dispatcher.php?url='.$options['resource'] : $options['url']);
             $xml = $options['postXml'];
             if (isset($options['id_shop'])) {
                 $url .= '&id_shop='.$options['id_shop'];
@@ -315,7 +317,7 @@ class PrestashopWebServiceLibrary
     /**
      * Retrieve (GET) a resource
      * <p>Unique parameter must take : <br><br>
-     * 'url' => Full URL for a GET request of WebService (ex: http://mystore.com/api/customers/1/)<br>
+     * 'url' => Full URL for a GET request of WebService (ex: http://mystore.com//webservice/dispatcher.php?url=customers/1)<br>
      * OR<br>
      * 'resource' => Resource name,<br>
      * 'id' => ID of a resource you want to get<br><br>
@@ -346,7 +348,7 @@ class PrestashopWebServiceLibrary
         if (isset($options['url'])) {
             $url = $options['url'];
         } elseif (isset($options['resource'])) {
-            $url = $this->url.'/api/'.$options['resource'];
+            $url = $this->url.'/webservice/dispatcher.php?url='.$options['resource'];
             $url_params = array();
             if (isset($options['id'])) {
                 $url .= '/'.$options['id'];
@@ -361,7 +363,7 @@ class PrestashopWebServiceLibrary
                 }
             }
             if (count($url_params) > 0) {
-                $url .= '?'.http_build_query($url_params);
+                $url .= '&'.http_build_query($url_params);
             }
         } else {
             throw new PrestashopWebServiceException('Bad parameters given');
@@ -374,7 +376,7 @@ class PrestashopWebServiceLibrary
                 $request = $this->executeRequest($url, array(CURLOPT_CUSTOMREQUEST => 'GET'));
                 $this->checkRequest($request);// check the response validity
                 Cache::put($options['cache_key'], $request['response'] , $options['expiration'] ?? 86400);
-            }  
+            }
         }else{
             $request = $this->executeRequest($url, array(CURLOPT_CUSTOMREQUEST => 'GET'));
             $this->checkRequest($request);// check the response validity
@@ -394,7 +396,7 @@ class PrestashopWebServiceLibrary
         if (isset($options['url'])) {
             $url = $options['url'];
         } elseif (isset($options['resource'])) {
-            $url = $this->url.'/api/'.$options['resource'];
+            $url = $this->url.'/webservice/dispatcher.php?url='.$options['resource'];
             $url_params = array();
             if (isset($options['id'])) {
                 $url .= '/'.$options['id'];
@@ -409,7 +411,7 @@ class PrestashopWebServiceLibrary
                 }
             }
             if (count($url_params) > 0) {
-                $url .= '?'.http_build_query($url_params);
+                $url .= '&'.http_build_query($url_params);
             }
         } else {
             throw new PrestashopWebServiceException('Bad parameters given');
@@ -439,7 +441,7 @@ class PrestashopWebServiceLibrary
             if (isset($options['url'])) {
                 $url = $options['url'];
             } else {
-                $url = $this->url.'/api/'.$options['resource'].'/'.$options['id'];
+                $url = $this->url.'/webservice/dispatcher.php?url='.$options['resource'].'/'.$options['id'];
             }
             $xml = $options['putXml'];
             if (isset($options['id_shop'])) {
@@ -487,9 +489,9 @@ class PrestashopWebServiceLibrary
             $url = $options['url'];
         } elseif (isset($options['resource']) && isset($options['id'])) {
             if (is_array($options['id'])) {
-                $url = $this->url.'/api/'.$options['resource'].'/?id=['.implode(',', $options['id']).']';
+                $url = $this->url.'/webservice/dispatcher.php?url='.$options['resource'].'/?id=['.implode(',', $options['id']).']';
             } else {
-                $url = $this->url.'/api/'.$options['resource'].'/'.$options['id'];
+                $url = $this->url.'/webservice/dispatcher.php?url='.$options['resource'].'/'.$options['id'];
             }
         }
         if (isset($options['id_shop'])) {
