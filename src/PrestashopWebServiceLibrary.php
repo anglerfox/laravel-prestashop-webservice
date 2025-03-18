@@ -64,7 +64,7 @@ class PrestashopWebServiceLibrary
         $this->key = $key;
         $this->debug = $debug;
         $this->version = 'unknown';
-
+        
         $this->runningInConsole = app()->runningInConsole();
     }
 
@@ -94,11 +94,12 @@ class PrestashopWebServiceLibrary
             if ($request['response']) {
                 $xml = $this->parseXML($request['response'], true);
             }
+
             throw new PrestashopWebServiceRequestException($messages[$request['status_code']], $request['status_code'], $xml);
         } else {
             $exception = 'This call to PrestaShop Web Services returned an unexpected HTTP status of: ';
             $exception.= $request['status_code'];
-            throw new PrestashopWebServiceRequestException($exception, $request['status_code'], null, $request['base_url']);
+            throw new PrestashopWebServiceException($exception);
         }
     }
 
@@ -151,6 +152,7 @@ class PrestashopWebServiceLibrary
                 $curl_options[$defkey] = $curl_params[$defkey];
             }
         }
+
         list($response, $info, $error) = $this->executeCurl($url.= '&ws_key=' . $this->key, $curl_options);
 
         $status_code = $info['http_code'];
@@ -165,9 +167,6 @@ class PrestashopWebServiceLibrary
 
         $header = substr($response, 0, $index);
         $body = substr($response, $index);
-        $redirectUrl = isset($info['redirect_url']) ? $info['redirect_url'] : null;
-        $parsedUrl = parse_url($redirectUrl ?: $url);
-        $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
 
         $headerArray = array();
         foreach (explode("\n", $header) as $headerItem) {
@@ -198,8 +197,7 @@ class PrestashopWebServiceLibrary
             'status_code' => $status_code,
             'response' => $body,
             'header' => $header,
-            'headers' => $headerArray,
-            'base_url' => $baseUrl
+            'headers' => $headerArray
             );
     }
 
@@ -297,7 +295,7 @@ class PrestashopWebServiceLibrary
         $xml = '';
 
         if (isset($options['resource'], $options['postXml']) || isset($options['url'], $options['postXml'])) {
-            $url = (isset($options['resource']) ? $this->url.'/webservice/dispatcher.php?url='.$options['resource'] : $options['url']);
+            $url = (isset($options['resource']) ? $this->url.'/api/'.$options['resource'] : $options['url']);
             $xml = $options['postXml'];
             if (isset($options['id_shop'])) {
                 $url .= '&id_shop='.$options['id_shop'];
