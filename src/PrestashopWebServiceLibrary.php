@@ -134,6 +134,7 @@ class PrestashopWebServiceLibrary
             CURLINFO_HEADER_OUT => true,
             CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
             CURLOPT_USERPWD => $this->key.':',
+            CURLOPT_USERAGENT => config('app.user_agent', 'Prestashop Connector v1.0'),
             CURLOPT_HTTPHEADER => array( 'Expect:' ),
             CURLOPT_SSL_VERIFYPEER => config('app.env') === 'local' ? 0 : 1,
             CURLOPT_SSL_VERIFYHOST => config('app.env') === 'local' ? 0 : 2 // value 1 is not accepted https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html
