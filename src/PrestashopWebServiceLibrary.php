@@ -264,8 +264,12 @@ class PrestashopWebServiceLibrary
             libxml_clear_errors();
             libxml_use_internal_errors(true);
             $xml = simplexml_load_string($response, 'SimpleXMLElement', LIBXML_NOCDATA);
+
             if (libxml_get_errors()) {
-                $msg = var_export(libxml_get_errors(), true);
+                $msg = "XML Parsing Error:\n";
+                foreach (libxml_get_errors() as $error) {
+                    $msg .= "Line {$error->line}, Column {$error->column}: {$error->message}\n";
+                }
                 libxml_clear_errors();
 
                 if (!$suppressExceptions) {
