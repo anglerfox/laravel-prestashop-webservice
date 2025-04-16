@@ -261,6 +261,19 @@ class PrestashopWebServiceLibrary
     protected function parseXML($response, $suppressExceptions = false)
     {
         if ($response != '') {
+            // Ensure it's UTF-8 encoded properly
+            $xmlString = mb_convert_encoding($response, 'UTF-8', 'UTF-8');
+
+            // Clean characters ONLY inside CDATA blocks (leave XML tags untouched)
+            $xmlString = preg_replace_callback('/<!\[CDATA\[(.*?)\]\]>/su', function ($matches) {
+                $cleaned = preg_replace(
+                    '/[^\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}]/u',
+                    '',
+                    $matches[1]
+                );
+                return "<![CDATA[$cleaned]]>";
+            }, $xmlString);
+
             libxml_clear_errors();
             libxml_use_internal_errors(true);
             $xml = simplexml_load_string($response, 'SimpleXMLElement', LIBXML_NOCDATA);
