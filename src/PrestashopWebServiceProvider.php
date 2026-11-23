@@ -6,9 +6,6 @@ use Illuminate\Support\ServiceProvider;
 
 class PrestashopWebServiceProvider extends ServiceProvider
 {
-
-    protected $defer = true;
-
     /**
      * Bootstrap the application services.
      *
