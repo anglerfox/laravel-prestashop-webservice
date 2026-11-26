@@ -1,6 +1,6 @@
 {
   "name": "anglerfox/laravel-prestashop-webservice",
-  "description": "Laravel 5 wrapper for Prestashop Web Service Library",
+  "description": "Laravel wrapper for Prestashop Web Service Library",
   "license": "MIT",
   "authors": [
     {
@@ -8,6 +8,9 @@
       "email": "support@anglerfox.com"
     }
   ],
+  "require": {
+    "php": "^8.5"
+  },
   "autoload": {
     "psr-4": {
       "Protechstudio\\PrestashopWebService\\": "src/"

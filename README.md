@@ -1,7 +1,7 @@
 Laravel Prestashop Web Service
 ========
 
-Laravel 5 wrapper for Prestashop Web Service Library
+Laravel wrapper for Prestashop Web Service Library
 
 Installation
 ------------

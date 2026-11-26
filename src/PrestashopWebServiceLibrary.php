@@ -225,8 +225,6 @@ class PrestashopWebServiceLibrary
             $error = curl_error($session);
         }
 
-        curl_close($session);
-
         return array($response, $info, $error);
     }
 
